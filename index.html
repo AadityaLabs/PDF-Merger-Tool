@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuMerge | Premium PDF Assembler</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        premium: {
+                            light: '#f8fafc',
+                            dark: '#09090b',
+                            accent: '#6366f1',
+                            accentHover: '#4f46e5',
+                            borderLight: '#e2e8f0',
+                            borderDark: '#27272a',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SortableJS (Drag & Drop Reordering) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+    <!-- pdf-lib (Pure Client-side PDF Merging) -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <!-- canvas-confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <link rel="stylesheet" href="./style.css">
+<body class="bg-premium-light dark:bg-premium-dark text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-500 overflow-x-hidden font-sans relative antialiased select-none">
+
+    <!-- Interactive Ambient Canvas Background -->
+    <canvas id="ambientCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+    <!-- Ambient Glow Orbs -->
+    <div class="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-500 dark:bg-indigo-600 glow-orb pointer-events-none z-0"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-violet-500 dark:bg-purple-800 glow-orb pointer-events-none z-0"></div>
+
+    <!-- MAIN HEADER -->
+    <header class="sticky top-0 z-30 w-full border-b border-slate-200/60 dark:border-zinc-800/60 glass-panel bg-white/75 dark:bg-premium-dark/75 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <!-- Brand Logo & Name -->
+            <div class="flex items-center space-x-3 group cursor-pointer">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:rotate-6 transition-transform duration-300">
+                    <i data-lucide="layers" class="w-5.5 h-5.5 text-white"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-zinc-300 bg-clip-text text-transparent">DocuMerge</span>
+                    <span class="text-[10px] uppercase font-semibold tracking-widest text-indigo-500 dark:text-indigo-400">Premium Assembler</span>
+                </div>
+            </div>
+
+            <!-- Header Controls -->
+            <div class="flex items-center space-x-3">
+                <!-- Preset Options Button -->
+                <button id="clearAllBtn" class="hidden sm:flex items-center space-x-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 text-sm font-medium hover:bg-slate-100 dark:hover:bg-zinc-900 text-slate-600 dark:text-zinc-400 transition-all duration-200 scale-hover">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <span>Clear All</span>
+                </button>
+                
+                <!-- Dark/Light Theme Toggle -->
+                <button id="themeToggleBtn" aria-label="Toggle Dark Mode" class="p-2.5 rounded-lg border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-900 text-slate-700 dark:text-zinc-300 transition-all duration-200 scale-hover">
+                    <i id="themeToggleIcon" data-lucide="moon" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- APP CONTENT VIEWPORT -->
+    <main class="relative z-10 max-w-7xl mx-auto px-6 py-8 md:py-12 min-h-[calc(100vh-80px)] flex flex-col gap-8">
+        
+        <!-- INTRO & VALUE PROP -->
+        <div class="max-w-3xl animate-fade-in-up" style="animation-delay: 0.1s">
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.1] mb-4">
+                Arrange and <span class="bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">Merge PDFs</span> beautifully.
+            </h1>
+            <p class="text-lg text-slate-600 dark:text-zinc-400 font-normal leading-relaxed">
+                A browser-secure, zero-server document workspace. Drag, rearrange, and synthesize customized PDF binders instantly. No files leave your device.
+            </p>
+        </div>
+
+        <!-- APP GRID CONTAINER -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- LEFT PANEL: DROPZONE & STATUS CONTROL -->
+            <div class="lg:col-span-5 flex flex-col gap-6 animate-fade-in-up" style="animation-delay: 0.2s">
+                <!-- Dropzone Card -->
+                <div id="dropZone" class="relative group border-2 border-dashed border-slate-300 dark:border-zinc-800 rounded-2xl bg-white/40 dark:bg-zinc-950/40 hover:bg-white/80 dark:hover:bg-zinc-950/80 transition-all duration-300 p-8 text-center cursor-pointer overflow-hidden flex flex-col items-center justify-center min-h-[300px] shadow-sm hover:shadow-xl hover:shadow-indigo-500/5">
+                    <input type="file" id="fileInput" class="hidden" accept="application/pdf" multiple>
+                    
+                    <!-- Decorative vector elements inside dropzone -->
+                    <div class="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="100%" height="100%" fill="none" rx="16" class="stroke-indigo-500/40 dark:stroke-indigo-400/30 anim-dash" stroke-width="2"/>
+                        </svg>
+                    </div>
+
+                    <!-- Glowing center graphic -->
+                    <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-zinc-900 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/50 transition-all duration-300 shadow-inner">
+                        <i data-lucide="file-up" class="w-7 h-7 text-slate-500 dark:text-zinc-400 group-hover:text-indigo-500 transition-colors duration-300"></i>
+                    </div>
+
+                    <h3 class="text-base font-semibold text-slate-800 dark:text-zinc-200 mb-1">
+                        Select files or drag them here
+                    </h3>
+                    <p class="text-xs text-slate-400 dark:text-zinc-500 max-w-[240px] leading-relaxed mb-6">
+                        Support multiple PDF files. Instant parsing without upload.
+                    </p>
+                    
+                    <button class="px-5 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-semibold shadow-md shadow-black/10 group-hover:shadow-indigo-500/10 transition-all duration-200 pointer-events-none">
+                        Browse Files
+                    </button>
+                </div>
+
+                <!-- Config & Merge Hub -->
+                <div class="bg-white/80 dark:bg-zinc-950/60 border border-slate-200/80 dark:border-zinc-900/80 rounded-2xl p-6 shadow-sm flex flex-col gap-5">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-bold tracking-wider uppercase text-slate-400 dark:text-zinc-500">Workspace Settings</h2>
+                        <span id="queueCounter" class="bg-slate-100 dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 text-xs font-bold px-2.5 py-1 rounded-full border border-slate-200 dark:border-zinc-800/80">0 PDFs</span>
+                    </div>
+
+                    <!-- Output Filename Setting -->
+                    <div>
+                        <label for="outputFilename" class="block text-xs font-semibold text-slate-500 dark:text-zinc-400 mb-2">Output Binder Name</label>
+                        <div class="relative rounded-lg shadow-sm">
+                            <input type="text" id="outputFilename" value="Merged_Binder" class="w-full pl-3 pr-16 py-2.5 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800/80 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200" placeholder="Type name here...">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <span class="text-xs font-semibold text-slate-400 dark:text-zinc-500">.pdf</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Extra Configurations -->
+                    <div class="border-t border-slate-100 dark:border-zinc-900 pt-4 flex flex-col gap-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-slate-500 dark:text-zinc-400">Optimize size (compress pages)</span>
+                            <button id="toggleOptimization" class="w-10 h-6 bg-slate-200 dark:bg-zinc-800 rounded-full p-0.5 transition-colors duration-200 focus:outline-none relative">
+                                <div class="w-5 h-5 bg-white dark:bg-zinc-400 rounded-full shadow-md transform translation duration-200 pointer-events-none translate-x-0"></div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Synthesis Button -->
+                    <button id="mergeBtn" disabled class="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 disabled:from-slate-200 disabled:to-slate-200 dark:disabled:from-zinc-900 dark:disabled:to-zinc-900 disabled:text-slate-400 dark:disabled:text-zinc-600 text-white text-sm font-bold tracking-wide shadow-lg disabled:shadow-none hover:shadow-indigo-500/20 active:scale-[0.98] transition-all duration-300 flex items-center justify-center space-x-2 cursor-pointer disabled:cursor-not-allowed">
+                        <i data-lucide="combine" class="w-5 h-5"></i>
+                        <span>Compile Documents</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: SORTABLE QUEUE -->
+            <div class="lg:col-span-7 flex flex-col gap-4 animate-fade-in-up" style="animation-delay: 0.3s">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex flex-col">
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Assembly Queue</h2>
+                        <p class="text-xs text-slate-400 dark:text-zinc-500">Reorder lists using handles or arrow controls.</p>
+                    </div>
+                </div>
+
+                <!-- Empty Queue state -->
+                <div id="emptyState" class="border border-slate-200/80 dark:border-zinc-900/80 rounded-2xl bg-white/30 dark:bg-zinc-950/20 p-12 text-center flex flex-col items-center justify-center gap-4 transition-all duration-300 min-h-[350px]">
+                    <div class="w-14 h-14 rounded-full bg-slate-100 dark:bg-zinc-900/50 flex items-center justify-center text-slate-400 dark:text-zinc-600 animate-pulse-slow">
+                        <i data-lucide="file-text" class="w-6 h-6"></i>
+                    </div>
+                    <div class="flex flex-col gap-1 max-w-sm">
+                        <h4 class="text-sm font-bold text-slate-700 dark:text-zinc-300">Workspace is empty</h4>
+                        <p class="text-xs text-slate-400 dark:text-zinc-500 leading-relaxed">
+                            Drag your documents here to construct a pipeline. You can drag and drop to configure the order of operation.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Assembly Pipeline (Interactive Sortable List) -->
+                <div id="sortableList" class="flex flex-col gap-3 min-h-[100px] hidden">
+                    <!-- Sortable card templates inserted dynamically here -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FULL SCREEN INTERACTIVE DRAG-OVERLAY -->
+    <div id="dragOverlay" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 glass-panel z-50 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-all duration-300 scale-95">
+        <div class="w-full max-w-lg rounded-2xl border-2 border-dashed border-indigo-500 bg-white/95 dark:bg-zinc-950/95 p-12 text-center flex flex-col items-center justify-center gap-4 shadow-2xl scale-hover transform duration-300">
+            <div class="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500 mb-2">
+                <i data-lucide="layers-3" class="w-8 h-8 animate-bounce"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 dark:text-zinc-200">Release to assemble!</h3>
+            <p class="text-sm text-slate-400 dark:text-zinc-500">Add documents instantly to the active queue.</p>
+        </div>
+    </div>
+
+    <!-- ASSEMBLY PROGRESS / PROCESSING MODAL -->
+    <div id="processingModal" class="fixed inset-0 bg-slate-900/50 dark:bg-black/70 glass-panel z-50 flex items-center justify-center p-6 hidden">
+        <div class="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 p-8 text-center shadow-2xl flex flex-col items-center gap-6 animate-fade-in-up">
+            <!-- Loader visualization -->
+            <div class="relative w-20 h-20">
+                <!-- Circular outer track -->
+                <svg class="w-full h-full transform -rotate-90">
+                    <circle cx="40" cy="40" r="34" stroke="currentColor" stroke-width="4" class="text-slate-100 dark:text-zinc-900" fill="transparent"/>
+                    <circle id="loadingProgressRing" cx="40" cy="40" r="34" stroke="url(#gradient)" stroke-width="5" stroke-dasharray="213.6" stroke-dashoffset="213.6" fill="transparent" class="transition-all duration-300 stroke-linecap-round"/>
+                    
+                    <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#6366f1" />
+                            <stop offset="100%" stop-color="#a855f7" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <!-- Inner state icon -->
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i id="processingIcon" data-lucide="loader-2" class="w-7 h-7 text-indigo-500 animate-spin"></i>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <h3 id="processingTitle" class="text-base font-bold text-slate-800 dark:text-zinc-100">Assembling Binders</h3>
+                <p id="processingStateDesc" class="text-xs text-slate-400 dark:text-zinc-500">Injecting target arrays...</p>
+            </div>
+            
+            <div class="w-full bg-slate-100 dark:bg-zinc-900 rounded-full h-1.5 overflow-hidden">
+                <div id="processingProgressBar" class="bg-indigo-500 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PREVIEW / SUCCESS MODAL -->
+    <div id="previewModal" class="fixed inset-0 bg-slate-900/50 dark:bg-black/70 glass-panel z-50 flex items-center justify-center p-4 md:p-6 hidden">
+        <div class="w-full max-w-5xl h-[85vh] rounded-2xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 shadow-2xl flex flex-col md:flex-row overflow-hidden animate-fade-in-up">
+            
+            <!-- Left Half: Left Action Center / Document Info -->
+            <div class="w-full md:w-80 border-r border-slate-200 dark:border-zinc-900 p-6 flex flex-col justify-between bg-slate-50/50 dark:bg-zinc-950/50">
+                <div class="flex flex-col gap-6">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] uppercase font-bold tracking-widest text-emerald-500 flex items-center gap-1">
+                            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Synthesis Complete
+                        </span>
+                        <button id="closePreviewBtn" class="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-zinc-900 text-slate-400 hover:text-slate-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors duration-200">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex flex-col gap-1.5">
+                        <h3 id="successDocTitle" class="text-xl font-bold text-slate-800 dark:text-white truncate">Binder Output</h3>
+                        <p id="successDocMeta" class="text-xs text-slate-400 dark:text-zinc-500">Size: Calculating...</p>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-slate-100 dark:bg-zinc-900/80 border border-slate-200/50 dark:border-zinc-800/80 flex flex-col gap-2.5">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-500 dark:text-zinc-400">Total Page Count</span>
+                            <span id="metaTotalPages" class="font-bold text-slate-800 dark:text-zinc-200">0</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-500 dark:text-zinc-400">Merged Files Count</span>
+                            <span id="metaTotalFiles" class="font-bold text-slate-800 dark:text-zinc-200">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3 mt-6">
+                    <!-- Standard Download Button -->
+                    <button id="downloadMergedBtn" class="w-full py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all duration-200 scale-hover">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Download PDF</span>
+                    </button>
+                    
+                    <!-- Done / Back button -->
+                    <button id="doneBtn" class="w-full py-3 rounded-xl border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-slate-100 dark:hover:bg-zinc-900 active:scale-[0.98] transition-all duration-200">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Start New Session</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Half: Live PDF Viewer Viewport -->
+            <div class="flex-1 bg-slate-100 dark:bg-zinc-900/60 p-4 relative flex flex-col min-h-[300px]">
+                <div class="absolute inset-0 flex items-center justify-center opacity-40 z-0">
+                    <div class="text-center">
+                        <i data-lucide="eye" class="w-12 h-12 text-slate-300 dark:text-zinc-700 mx-auto mb-2"></i>
+                        <span class="text-xs text-slate-400 dark:text-zinc-600">Generating live preview frame...</span>
+                    </div>
+                </div>
+                <!-- Dynamic Iframe container -->
+                <iframe id="pdfPreviewIframe" class="w-full h-full rounded-lg border border-slate-200 dark:border-zinc-800 shadow-sm relative z-10 hidden" sandbox="allow-scripts allow-same-origin"></iframe>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- NOTIFICATION HOST -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none max-w-sm w-full px-4"></div>
+
+    
+    <script src="./app.js"></script>
+</body>
+</html>
